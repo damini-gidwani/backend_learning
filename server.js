@@ -5,7 +5,7 @@ const joi = require("joi");
 const app = express();
 const jwt = require("jsonwebtoken");
 const cookieParser = require("cookie-parser");
-const authMiddleware = require("./authMiddleware.js");
+const authMiddleware = require("./authMiddleware");
 const {
   studentModel,
   registerModel,

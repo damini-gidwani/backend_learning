@@ -202,7 +202,8 @@ app.post("/createProduct", async (req, res) => {
 app.get("/getAllProducts", authMiddleware, async (req, res) => {
   try {
     const { page = 1, sort = "asc", limit = 3 } = req.query;
-    const products = await productModel.find({})
+    const products = await productModel
+      .find({})
       .sort({ price: sort === "asc" ? 1 : -1 })
       .limit(Number(limit))
       .skip((Number(page) - 1) * Number(limit))
@@ -215,16 +216,27 @@ app.get("/getAllProducts", authMiddleware, async (req, res) => {
 });
 
 app.get("/getProductById/:id", authMiddleware, async (req, res) => {
-  try{
-    const product=await productModel.findById(req.params.id).select("-_id -SKU -__v");
-    if(!product) return res.status(404).send("Product not found!");
+  try {
+    const product = await productModel
+      .findById(req.params.id)
+      .select("-_id -SKU -__v");
+    if (!product) return res.status(404).send("Product not found!");
     res.json(product);
-  }
-  catch(err){
+  } catch (err) {
     console.log(err);
     res.status(500).send("SERVER ERROR!");
   }
-})
+});
+
+app.get("/logout", authMiddleware, async (req, res) => {
+  try {
+    res.clearCookie("givenToken", { httpOnly: true });
+    res.send("Logged out successfully!!");
+  } catch (err) {
+    console.log(err);
+    res.status(500).send("SERVER ERROR!");
+  }
+});
 
 connectDB()
   .then(() => {

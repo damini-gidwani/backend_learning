@@ -7,75 +7,62 @@ const jwt = require("jsonwebtoken");
 const joi = require("joi");
 const authMiddleware = require("./authMiddleware");
 const cookieParser = require("cookie-parser");
-const { RiReservedFill } = require("react-icons/ri");
+
+const validationMiddleware = require("./validationMiddleware");
+const createProductSchema = require("./validationSchema/createProductValidationSchema");
+const registerSchema = require("./validationSchema/registerValidationSchema");
+const loginSchema = require("./validationSchema/loginValidationSchema");
 
 app.use(express.json());
 app.use(cookieParser());
 
-app.post("/register", async (req, res) => {
-  try {
-    const validateSchema = joi.object({
-      fname: joi.string().min(2).max(128).required(),
-      lname: joi.string().min(2).max(128).required(),
-      dob: joi.date().required(),
-      gen: joi.string().valid("male", "female", "others").required(),
-      email: joi.string().email().required(),
-      createPass: joi.string().min(8).required(),
-      confirmPass: joi.string().min(8).required(),
-    });
+app.post(
+  "/register",
+  validationMiddleware(registerSchema),
+  async (req, res) => {
+    try {
+      const { fname, lname, dob, gen, email, createPass, confirmPass } =
+        req.body;
 
-    const { error } = validateSchema.validate(req.body);
-    if (error) return res.status(400).send(error.details[0].message);
+      const user = await userModel.findOne({ email });
 
-    const { fname, lname, dob, gen, email, createPass, confirmPass } = req.body;
+      if (user) return res.status(400).json({ message: "User already exists" });
 
-    const user = await userModel.findOne({ email });
+      if (createPass !== confirmPass)
+        return res.status(400).json({ message: "Passwords do not match" });
 
-    if (user) return res.status(400).json({ message: "User already exists" });
+      const hashedPassword = await bcrypt.hash(createPass, 10);
 
-    if (createPass !== confirmPass)
-      return res.status(400).json({ message: "Passwords do not match" });
+      const newUser = {
+        fname,
+        lname,
+        dob,
+        gen,
+        email,
+        password: hashedPassword,
+      };
 
-    const hashedPassword = await bcrypt.hash(createPass, 10);
-
-    const newUser = {
-      fname,
-      lname,
-      dob,
-      gen,
-      email,
-      password: hashedPassword,
-    };
-
-    const createdUser = await userModel.create(newUser);
-    res.status(201).json({
-      message: "User created successfully",
-      user: {
-        id: createdUser._id,
-        fname: createdUser.fname,
-        lname: createdUser.lname,
-        dob: createdUser.dob,
-        gen: createdUser.gen,
-        email: createdUser.email,
-      },
-    });
-  } catch (err) {
-    console.log(err);
-    res.status(500).json({ message: "Internal server error" });
-  }
-});
-
-app.post("/login", async (req, res) => {
-  try {
-    const validationSchema = joi.object({
-      email: joi.string().email().required(),
-      password: joi.string().min(8).required(),
-    });
-    const { error } = validationSchema.validate(req.body);
-    if (error) {
-      return res.status(400).send(error.details[0].message);
+      const createdUser = await userModel.create(newUser);
+      res.status(201).json({
+        message: "User created successfully",
+        user: {
+          id: createdUser._id,
+          fname: createdUser.fname,
+          lname: createdUser.lname,
+          dob: createdUser.dob,
+          gen: createdUser.gen,
+          email: createdUser.email,
+        },
+      });
+    } catch (err) {
+      console.log(err);
+      res.status(500).json({ message: "Internal server error" });
     }
+  },
+);
 
+app.post("/login", validationMiddleware(loginSchema), async (req, res) => {
+  try {
     const { email, password } = req.body;
     const userExist = await userModel.findOne({ email });
     if (!userExist) {
@@ -111,42 +98,34 @@ app.get("/logout", authMiddleware, async (req, res) => {
   }
 });
 
-app.post("/createProduct", authMiddleware, async (req, res) => {
-  try {
-    const validateSchema = joi.object({
-      name: joi.string().required().min(2),
-      price: joi.number().required().min(0),
-      category: joi
-        .string()
-        .required()
-        .valid("electronics", "clothing", "books", "home", "sports"),
-      SKU: joi.string().required(),
-    });
-    const { error } = validateSchema.validate(req.body);
-    if (error) {
-      return res.status(400).json(error.details[0].message);
+app.post(
+  "/createProduct",
+  authMiddleware,
+  validationMiddleware(createProductSchema),
+  async (req, res) => {
+    try {
+      const { name, price, category, SKU } = req.body;
+      const product = {
+        name,
+        price,
+        category,
+        SKU,
+      };
+      let productExist = await productModel.findOne({ SKU });
+      if (productExist) {
+        return res.status(400).send({ message: "Product already exist!" });
+      }
+      const newproduct = await productModel.create(product);
+      res.status(201).json({
+        message: "Product created successfully",
+        product: newproduct,
+      });
+    } catch (err) {
+      console.log(err);
+      res.status(500).send({ meassage: "Internal Server Error" });
     }
-    const { name, price, category, SKU } = req.body;
-    const product = {
-      name,
-      price,
-      category,
-      SKU,
-    };
-    let productExist = await productModel.findOne({ SKU });
-    if (productExist) {
-      return res.status(400).send({ message: "Product already exist!" });
-    }
-    const newproduct = await productModel.create(product);
-    res.status(201).json({
-      message: "Product created successfully",
-      product: newproduct,
-    });
-  } catch (err) {
-    console.log(err);
-    res.status(500).send({ meassage: "Internal Server Error" });
-  }
-});
+  },
+);
 
 app.delete("/deleteProductBySku/:sku", authMiddleware, async (req, res) => {
   const sku = req.params.sku;

@@ -1,3 +1,8 @@
+require("dotenv").config({
+  path: __dirname + "/.env"
+});
+
+
 const express = require("express");
 const cookieParser = require("cookie-parser");
 const connectDB = require("./db");
@@ -18,8 +23,8 @@ app.use('/product',productRouter)
 
 connectDB()
   .then(() => {
-    app.listen(5000, () => {
-      console.log("Server is running on port 5000");
+    app.listen(Number(process.env.PORT), () => {
+      console.log(`Server is running on port ${process.env.PORT}`);
     });
   })
   .catch((err) => {

@@ -1,10 +1,12 @@
 const userModel = require("../model/userModel");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
+const mongoose = require("mongoose");
 
 const login = async (req, res) => {
   try {
     const { email, password } = req.body;
+
     const userExist = await userModel.findOne({ email });
     if (!userExist) {
       return res.status(400).send("oops! Invalid credentials!!");
@@ -14,7 +16,7 @@ const login = async (req, res) => {
       return res.status(400).send("OOPS! Invalid credentials!!");
     }
     //generate a token and send it to the user
-    const token = jwt.sign({ userID: userExist._id }, "MySecretKey", {
+    const token = jwt.sign({ userID: userExist._id }, process.env.JWT_SECRET, {
       expiresIn: "1h",
     });
 
@@ -50,7 +52,10 @@ const register = async (req, res) => {
     if (createPass !== confirmPass)
       return res.status(400).json({ message: "Passwords do not match" });
 
-    const hashedPassword = await bcrypt.hash(createPass, 10);
+    const hashedPassword = await bcrypt.hash(
+      createPass,
+      Number(process.env.SALT),
+    );
 
     const newUser = {
       fname,

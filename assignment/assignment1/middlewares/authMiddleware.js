@@ -8,7 +8,7 @@ const authMiddleware = (req, res, next) => {
         .status(401)
         .send("Unauthorized! Please login to access this resource.");
     }
-    let secretkey = "MySecretKey";
+    let secretkey = process.env.JWT_SECRET;
     const decode = jwt.verify(token, secretkey);
     req.user = decode;
     next();

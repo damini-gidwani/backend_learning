@@ -51,18 +51,13 @@ const registerUser = async (
     throw new Error("Passwords do not match");
   }
 
-  const hashedPassword = await bcrypt.hash(
-    createPass,
-    Number(process.env.SALT)
-  );
-
   const newUser = {
     fname,
     lname,
     dob,
     gen,
     email,
-    password: hashedPassword,
+    password: createPass,
   };
 
   const createdUser = await userModel.create(newUser);

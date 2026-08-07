@@ -3,6 +3,8 @@ const createProductSchema = require("../validationSchema/createProductValidation
 const express = require("express");
 const router = express.Router();
 const authMiddleware = require("../middlewares/authMiddleware");
+const authorization = require("../middlewares/autorizationMiddleware");
+
 const {
   createProduct,
   deleteProductBySku,
@@ -14,16 +16,33 @@ const {
 router.post(
   "/createProduct",
   authMiddleware,
+  authorization("admin", "seller"),
   validationMiddleware(createProductSchema),
   createProduct,
 );
 
-router.delete("/deleteProductBySku/:sku", authMiddleware, deleteProductBySku);
+router.delete(
+  "/deleteProductBySku/:sku",
+  authMiddleware,
+  authorization("admin", "seller"),
+  deleteProductBySku,
+);
 
-router.get("/getAllProducts", authMiddleware, getAllProducts);
+router.get(
+  "/getAllProducts",
+  getAllProducts,
+);
 
-router.put("/updateProductById/:id", authMiddleware, updateProductById);
+router.put(
+  "/updateProductById/:id",
+  authMiddleware,
+  authorization("admin", "seller"),
+  updateProductById,
+);
 
-router.get("/getProductById/:id", getProductById);
+router.get(
+  "/getProductById/:id",
+  getProductById,
+);
 
 module.exports = router;

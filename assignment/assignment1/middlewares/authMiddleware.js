@@ -1,20 +1,39 @@
 const jwt = require("jsonwebtoken");
+const userModel = require("../model/userModel");
+const { decodeBase64 } = require("bcryptjs");
 
-const authMiddleware = (req, res, next) => {
+const authMiddleware = async (req, res, next) => {
   try {
     const token = req.cookies.givenToken;
+
     if (!token) {
       return res
         .status(401)
         .send("Unauthorized! Please login to access this resource.");
     }
-    let secretkey = process.env.JWT_SECRET;
-    const decode = jwt.verify(token, secretkey);
+
+    const decode = jwt.verify(
+      token,
+      process.env.JWT_SECRET
+    );
+
+    // const user = await userModel.findById(decode.userID);
+
+    if (!decode) {
+      return res.status(401).send("User not found");
+    }
+
     req.user = decode;
+
     next();
+
   } catch (err) {
     console.log(err);
-    res.status(500).send("Invalid or Expired Token");
+
+    return res
+      .status(401)
+      .send("Invalid or Expired Token");
   }
 };
+
 module.exports = authMiddleware;

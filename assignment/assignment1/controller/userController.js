@@ -16,6 +16,7 @@ const login = async (req, res) => {
     res
       .status(200)
       .send(`Welcome ${user.fname}!! You are logged in successfully!`);
+
   } catch (err) {
     console.log(err);
 
@@ -29,6 +30,7 @@ const login = async (req, res) => {
   }
 };
 
+
 const logout = async (req, res) => {
   try {
     res.clearCookie("givenToken", {
@@ -36,6 +38,7 @@ const logout = async (req, res) => {
     });
 
     res.send("Logged out successfully!!");
+
   } catch (err) {
     console.log(err);
 
@@ -45,6 +48,7 @@ const logout = async (req, res) => {
   }
 };
 
+
 const register = async (req, res) => {
   try {
     const {
@@ -52,6 +56,7 @@ const register = async (req, res) => {
       lname,
       dob,
       gen,
+      role,
       email,
       createPass,
       confirmPass,
@@ -62,6 +67,7 @@ const register = async (req, res) => {
       lname,
       dob,
       gen,
+      role,
       email,
       createPass,
       confirmPass
@@ -75,9 +81,11 @@ const register = async (req, res) => {
         lname: createdUser.lname,
         dob: createdUser.dob,
         gen: createdUser.gen,
+        role: createdUser.role,
         email: createdUser.email,
       },
     });
+
   } catch (err) {
     console.log(err);
 
@@ -95,6 +103,7 @@ const register = async (req, res) => {
     });
   }
 };
+
 
 module.exports = {
   login,

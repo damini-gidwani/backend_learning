@@ -9,21 +9,18 @@ const loginUser = async (email, password) => {
     throw new Error("Invalid credentials!!");
   }
 
-  const isPasswordValid = await bcrypt.compare(
-    password,
-    userExist.password
-  );
+  const isPasswordValid = await bcrypt.compare(password, userExist.password);
 
   if (!isPasswordValid) {
     throw new Error("Invalid credentials!!");
   }
 
   const token = jwt.sign(
-    { userID: userExist._id },
+    { userID: userExist._id, role: userExist.role },
     process.env.JWT_SECRET,
     {
       expiresIn: "1h",
-    }
+    },
   );
 
   return {
@@ -37,9 +34,10 @@ const registerUser = async (
   lname,
   dob,
   gen,
+  role,
   email,
   createPass,
-  confirmPass
+  confirmPass,
 ) => {
   const user = await userModel.findOne({ email });
 
@@ -56,6 +54,7 @@ const registerUser = async (
     lname,
     dob,
     gen,
+    role,
     email,
     password: createPass,
   };

@@ -16,7 +16,6 @@ const userSchema = new mongoose.Schema({
   },
   dob: {
     type: Date,
-    trim: true,
     required: true,
   },
   gen: {
@@ -24,6 +23,13 @@ const userSchema = new mongoose.Schema({
     enum: ["male", "female", "others"],
     required: true,
     trim: true,
+  },
+  role: {
+    type: String,
+    enum: ["admin", "user", "seller"],
+    required: true,
+    trim: true,
+    default: "user",
   },
   email: {
     type: String,
@@ -43,10 +49,7 @@ const userSchema = new mongoose.Schema({
 userSchema.pre("save", async function () {
   if (!this.isModified("password")) return;
 
-  this.password = await bcrypt.hash(
-    this.password,
-    Number(process.env.SALT)
-  );
+  this.password = await bcrypt.hash(this.password, Number(process.env.SALT));
 });
 
 const userModel = mongoose.model("user", userSchema);

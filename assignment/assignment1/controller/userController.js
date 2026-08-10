@@ -1,6 +1,9 @@
+const { GrUserSettings } = require("react-icons/gr");
 const {
   loginUser,
   registerUser,
+  getAllUser,
+  getOneUser,
 } = require("../service/userService");
 
 const login = async (req, res) => {
@@ -16,7 +19,6 @@ const login = async (req, res) => {
     res
       .status(200)
       .send(`Welcome ${user.fname}!! You are logged in successfully!`);
-
   } catch (err) {
     console.log(err);
 
@@ -30,7 +32,6 @@ const login = async (req, res) => {
   }
 };
 
-
 const logout = async (req, res) => {
   try {
     res.clearCookie("givenToken", {
@@ -38,7 +39,6 @@ const logout = async (req, res) => {
     });
 
     res.send("Logged out successfully!!");
-
   } catch (err) {
     console.log(err);
 
@@ -48,19 +48,10 @@ const logout = async (req, res) => {
   }
 };
 
-
 const register = async (req, res) => {
   try {
-    const {
-      fname,
-      lname,
-      dob,
-      gen,
-      role,
-      email,
-      createPass,
-      confirmPass,
-    } = req.body;
+    const { fname, lname, dob, gen, role, email, createPass, confirmPass } =
+      req.body;
 
     const createdUser = await registerUser(
       fname,
@@ -70,7 +61,7 @@ const register = async (req, res) => {
       role,
       email,
       createPass,
-      confirmPass
+      confirmPass,
     );
 
     res.status(201).json({
@@ -85,7 +76,6 @@ const register = async (req, res) => {
         email: createdUser.email,
       },
     });
-
   } catch (err) {
     console.log(err);
 
@@ -104,9 +94,67 @@ const register = async (req, res) => {
   }
 };
 
+const getAllUsers = async (req, res) => {
+  try {
+    const users = await getAllUser();
+    res.json({ message: "users fetched suucessfully!", users });
+  } catch (err) {
+    console.log(err);
+    if (err.message == "users not found")
+      return res.json({ message: "users not found" });
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+const getUserById = async (req, res) => {
+  try {
+    const user = await getOneUser(req.params.id);
+
+    return res.json({
+      message: "user fetched successfully!",
+      user
+    });
+  } catch (err) {
+    console.log(err);
+
+    if (err.message === "user not found") {
+      return res.status(404).json({
+        message: "user not found"
+      });
+    }
+
+    return res.status(500).json({
+      message: "Internal server error"
+    });
+  }
+};
+
+const getMyProfile = async (req, res) => {
+  try {
+    const user = await getOneUser(req.user.userID);
+
+    return res.json({
+      message: "user fetched successfully!",
+      user
+    });
+  } catch (err) {
+    if (err.message === "user not found") {
+      return res.status(404).json({
+        message: "user not found"
+      });
+    }
+
+    return res.status(500).json({
+      message: "Internal server error"
+    });
+  }
+};
 
 module.exports = {
   login,
   logout,
   register,
+  getAllUsers,
+  getUserById,
+  getMyProfile
 };

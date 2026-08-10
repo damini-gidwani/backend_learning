@@ -64,7 +64,31 @@ const registerUser = async (
   return createdUser;
 };
 
+const getAllUser = async () => {
+  const users = await userModel.find({});
+
+  if (users.length === 0) {
+    throw new Error("users not found");
+  }
+
+  return users;
+};
+
+const getOneUser = async (id) => {
+  const user = await userModel
+    .findById(id)
+    .populate("addresses");
+
+  if (!user) {
+    throw new Error("user not found");
+  }
+
+  return user;
+};
+
 module.exports = {
   loginUser,
   registerUser,
+  getAllUser,
+  getOneUser
 };

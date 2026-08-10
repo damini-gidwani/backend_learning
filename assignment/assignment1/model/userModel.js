@@ -46,6 +46,15 @@ const userSchema = new mongoose.Schema({
   },
 });
 
+userSchema.virtual("addresses",{
+  ref:"address",
+  localField:"_id",
+  foreignField:"user"
+})
+
+userSchema.set("toJSON",{virtuals:true});
+userSchema.set("toObject",{virtuals:true})
+
 userSchema.pre("save", async function () {
   if (!this.isModified("password")) return;
 

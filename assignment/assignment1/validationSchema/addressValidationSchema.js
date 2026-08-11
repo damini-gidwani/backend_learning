@@ -12,6 +12,10 @@ const validateSchema = Joi.object({
   pincode: Joi.string()
     .pattern(/^[0-9]{6}$/)
     .required(),
+
+  longitude: Joi.number().required(),
+
+  latitude: Joi.number().required(),
 });
 
 module.exports = validateSchema;

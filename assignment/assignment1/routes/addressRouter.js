@@ -7,7 +7,8 @@ const {
   getAddresses,
   getAllAddresses,
   updAddress,
-  delAddress
+  delAddress,
+  findAddressNearMe,
 } = require("../controller/addressController");
 const validationMiddleware = require("../middlewares/validationMiddleware");
 const validateSchema = require("../validationSchema/addressValidationSchema");
@@ -33,7 +34,7 @@ router.get(
 router.put(
   "/updateAddress/:id",
   authMiddleware,
-  authorization("user","admin"),
+  authorization("user", "admin"),
   updAddress,
 );
 
@@ -41,7 +42,14 @@ router.delete(
   "/deleteAddress/:id",
   authMiddleware,
   authorization("admin", "user"),
-  delAddress
+  delAddress,
+);
+
+router.get(
+  "/findAddressNearMe",
+  authMiddleware,
+  authorization("admin", "seller", "user"),
+  findAddressNearMe,
 );
 
 module.exports = router;

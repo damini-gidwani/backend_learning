@@ -1,16 +1,21 @@
 const addressModel = require("../model/addressModel");
 
-const createAddresses = async (user, type, address, city, state, pincode) => {
+const createAddresses = async (
+  user,
+  type,
+  address,
+  city,
+  state,
+  pincode,
+  location,
+) => {
   const addressExist = await addressModel.findOne({
     user,
-    address,
-    city,
-    state,
-    pincode,
+    type,
   });
 
   if (addressExist) {
-    throw new Error("address already exists");
+    throw new Error(`${type} address already exists`);
   }
 
   const newAddress = await addressModel.create({
@@ -20,14 +25,17 @@ const createAddresses = async (user, type, address, city, state, pincode) => {
     city,
     state,
     pincode,
+    location,
   });
   return newAddress;
 };
 
 const getAddress = async (userID) => {
-  const addressExist = await addressModel.find({
-    user: userID,
-  });
+  const addressExist = await addressModel
+    .find({
+      user: userID,
+    })
+    .populate("user", "fname lname email");
 
   if (addressExist.length === 0) {
     throw new Error("address not found");
@@ -41,10 +49,7 @@ const getAllAddress = async () => {
 };
 
 const updateAddress = async (id, userID, role, data) => {
-  const filter =
-    role === "admin"
-      ? { _id: id }
-      : { _id: id, user: userID };
+  const filter = role === "admin" ? { _id: id } : { _id: id, user: userID };
 
   const newAdd = await addressModel.findOneAndUpdate(
     filter,
@@ -53,7 +58,7 @@ const updateAddress = async (id, userID, role, data) => {
     },
     {
       returnDocument: "after",
-    }
+    },
   );
 
   if (!newAdd) {
@@ -64,10 +69,7 @@ const updateAddress = async (id, userID, role, data) => {
 };
 
 const deleteAddress = async (id, userID, role) => {
-  const filter =
-    role === "admin"
-      ? { _id: id }
-      : { _id: id, user: userID };
+  const filter = role === "admin" ? { _id: id } : { _id: id, user: userID };
 
   const deletedAddress = await addressModel.findOneAndDelete(filter);
 
@@ -78,4 +80,26 @@ const deleteAddress = async (id, userID, role) => {
   return deletedAddress;
 };
 
-module.exports = { createAddresses, getAddress, getAllAddress, updateAddress, deleteAddress };
+const findAddress = async (long, lat, distance, id) => {
+  return await addressModel.find({
+    user: { $ne: id }, //exclude loggedIn user address
+    location: {
+      $near: {
+        $geometry: {
+          type: "Point",
+          coordinates: [Number(long), Number(lat)],
+        },
+        $maxDistance: Number(distance),
+      },
+    },
+  });
+};
+
+module.exports = {
+  createAddresses,
+  getAddress,
+  getAllAddress,
+  updateAddress,
+  deleteAddress,
+  findAddress,
+};

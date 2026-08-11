@@ -4,11 +4,17 @@ const {
   getAllAddress,
   updateAddress,
   deleteAddress,
+  findAddress,
 } = require("../service/addressService");
 
 const createAddress = async (req, res) => {
   try {
-    const { type, address, city, state, pincode } = req.body;
+    const { type, address, city, state, pincode, longitude, latitude } =
+      req.body;
+    const location = {
+      type: "Point",
+      coordinates: [longitude, latitude],
+    };
     const newAddress = await createAddresses(
       req.user.userID,
       type,
@@ -16,15 +22,24 @@ const createAddress = async (req, res) => {
       city,
       state,
       pincode,
+      location,
     );
+
     res.status(201).json({
       message: "Address created successfully",
       address: newAddress,
     });
   } catch (err) {
     console.log(err);
+
+    if (err.message.includes("already exists")) {
+      return res.status(409).json({
+        message: err.message,
+      });
+    }
+
     res.status(500).json({
-      message: err.message,
+      message: "Internal server error",
     });
   }
 };
@@ -121,10 +136,24 @@ const delAddress = async (req, res) => {
   }
 };
 
+const findAddressNearMe = async (req, res) => {
+  try {
+    const { longitude, latitude, distance } = req.query;
+    const addresses = await findAddress(longitude, latitude, distance, req.user.userID);
+    if (addresses.length === 0)
+      return res.status(404).json({ message: "address not found" });
+    res.json({ message: `${addresses.length} addresses are near by you....`, addresses });
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({ message: "INTERNAL SERVER ERROR" });
+  }
+};
+
 module.exports = {
   createAddress,
   getAddresses,
   getAllAddresses,
   updAddress,
   delAddress,
+  findAddressNearMe
 };

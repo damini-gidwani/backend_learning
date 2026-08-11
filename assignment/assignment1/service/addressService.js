@@ -92,7 +92,7 @@ const findAddress = async (long, lat, distance, id) => {
         $maxDistance: Number(distance),
       },
     },
-  });
+  }).select("-_id").populate("user","fname lname email -_id");
 };
 
 module.exports = {

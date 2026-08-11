@@ -38,7 +38,7 @@ const addressSchema = new mongoose.Schema({
       type: [Number],
       required: true,
     },
-  },
+  }
 });
 addressSchema.index({location:"2dsphere"})
 const addressModel = mongoose.model("address", addressSchema);

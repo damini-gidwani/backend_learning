@@ -52,7 +52,7 @@ const updateProductService = async (id, data) => {
     {
       $set: data,
     },
-    { returnDocument: "after" }
+    { returnDocument: "after" },
   );
 
   if (!updateProduct) {
@@ -75,10 +75,24 @@ const getProductByIdService = async (id) => {
   return product;
 };
 
+const searchProduct = async(query) => {
+  const products = await productModel.find({
+    name:{
+      $regex:query,
+      $options:"i"
+    }
+  })
+  if (products.length === 0) {
+    throw new Error("product not found!!");
+  }
+  return products;
+};
+
 module.exports = {
   createProductService,
   deleteProductService,
   getAllProductsService,
   updateProductService,
   getProductByIdService,
+  searchProduct
 };

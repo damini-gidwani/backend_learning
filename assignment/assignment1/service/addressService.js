@@ -81,18 +81,35 @@ const deleteAddress = async (id, userID, role) => {
 };
 
 const findAddress = async (long, lat, distance, id) => {
-  return await addressModel.find({
-    user: { $ne: id }, //exclude loggedIn user address
-    location: {
-      $near: {
-        $geometry: {
-          type: "Point",
-          coordinates: [Number(long), Number(lat)],
+  return await addressModel
+    .find({
+      user: { $ne: id }, //exclude loggedIn user address
+      location: {
+        $near: {
+          $geometry: {
+            type: "Point",
+            coordinates: [Number(long), Number(lat)],
+          },
+          $maxDistance: Number(distance),
         },
-        $maxDistance: Number(distance),
       },
+    })
+    .select("-_id")
+    .populate("user", "fname lname email -_id");
+};
+
+const searchAddress = async (query,user) => {
+  const address = await addressModel.find({
+    user:user,
+    address: {
+      $regex: query,
+      $options: "i",
     },
   }).select("-_id").populate("user","fname lname email -_id");
+  if (address.length === 0) {
+    throw new Error("address not found!!");
+  }
+  return address;
 };
 
 module.exports = {
@@ -102,4 +119,5 @@ module.exports = {
   updateAddress,
   deleteAddress,
   findAddress,
+  searchAddress
 };

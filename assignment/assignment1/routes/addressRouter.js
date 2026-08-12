@@ -9,6 +9,7 @@ const {
   updAddress,
   delAddress,
   findAddressNearMe,
+  searchAddresses
 } = require("../controller/addressController");
 const validationMiddleware = require("../middlewares/validationMiddleware");
 const validateSchema = require("../validationSchema/addressValidationSchema");
@@ -51,5 +52,12 @@ router.get(
   authorization("admin", "seller", "user"),
   findAddressNearMe,
 );
+
+router.get(
+  "/searchAddress",
+  authMiddleware,
+  authorization("admin","user","seller"),
+  searchAddresses
+)
 
 module.exports = router;

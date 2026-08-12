@@ -1,3 +1,4 @@
+const addressModel = require("../model/addressModel");
 const {
   createAddresses,
   getAddress,
@@ -5,6 +6,7 @@ const {
   updateAddress,
   deleteAddress,
   findAddress,
+  searchAddress,
 } = require("../service/addressService");
 
 const createAddress = async (req, res) => {
@@ -139,12 +141,40 @@ const delAddress = async (req, res) => {
 const findAddressNearMe = async (req, res) => {
   try {
     const { longitude, latitude, distance } = req.query;
-    const addresses = await findAddress(longitude, latitude, distance, req.user.userID);
+    const addresses = await findAddress(
+      longitude,
+      latitude,
+      distance,
+      req.user.userID,
+    );
     if (addresses.length === 0)
       return res.status(404).json({ message: "address not found" });
-    res.json({ message: `${addresses.length} addresses are near by you....`, addresses });
+    res.json({
+      message: `${addresses.length} addresses are near by you....`,
+      addresses,
+    });
   } catch (err) {
     console.log(err);
+    res.status(500).json({ message: "INTERNAL SERVER ERROR" });
+  }
+};
+
+const searchAddresses = async (req, res) => {
+  try {
+    const { query } = req.query;
+
+    if (!query || query.trim() === "") {
+      return res.status(400).json({
+        message: "search query is required",
+      });
+    }
+
+    const address = await searchAddress(query,req.user.userID);
+    return res.json({ address });
+  } catch (err) {
+    console.log(err);
+    if (err.message == "address not found!!")
+      return res.status(404).json({ message: "address not found!!" });
     res.status(500).json({ message: "INTERNAL SERVER ERROR" });
   }
 };
@@ -155,5 +185,6 @@ module.exports = {
   getAllAddresses,
   updAddress,
   delAddress,
-  findAddressNearMe
+  findAddressNearMe,
+  searchAddresses,
 };

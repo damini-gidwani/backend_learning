@@ -11,6 +11,7 @@ const {
   getAllProducts,
   updateProductById,
   getProductById,
+  searchProducts
 } = require("../controller/productController");
 
 router.post(
@@ -44,5 +45,10 @@ router.get(
   "/getProductById/:id",
   getProductById,
 );
+
+router.get(
+  "/searchProduct",
+  searchProducts
+)
 
 module.exports = router;

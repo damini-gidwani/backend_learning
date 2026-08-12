@@ -4,6 +4,7 @@ const {
   getAllProductsService,
   updateProductService,
   getProductByIdService,
+  searchProduct,
 } = require("../service/productService");
 
 // CREATE PRODUCT
@@ -11,12 +12,7 @@ const createProduct = async (req, res) => {
   try {
     const { name, price, category, SKU } = req.body;
 
-    const newProduct = await createProductService(
-      name,
-      price,
-      category,
-      SKU
-    );
+    const newProduct = await createProductService(name, price, category, SKU);
 
     res.status(201).json({
       message: "Product created successfully",
@@ -71,17 +67,9 @@ const deleteProductBySku = async (req, res) => {
 // GET ALL PRODUCTS
 const getAllProducts = async (req, res) => {
   try {
-    const {
-      page = 1,
-      limit = 2,
-      sort = "asc",
-    } = req.query;
+    const { page = 1, limit = 2, sort = "asc" } = req.query;
 
-    const allProducts = await getAllProductsService(
-      page,
-      limit,
-      sort
-    );
+    const allProducts = await getAllProductsService(page, limit, sort);
 
     res.json({
       message: "All products : ",
@@ -107,10 +95,7 @@ const updateProductById = async (req, res) => {
       });
     }
 
-    const updateProduct = await updateProductService(
-      id,
-      req.body
-    );
+    const updateProduct = await updateProductService(id, req.body);
 
     res.json({
       message: "product update",
@@ -160,10 +145,31 @@ const getProductById = async (req, res) => {
   }
 };
 
+const searchProducts = async (req, res) => {
+  try {
+    const { query } = req.query;
+
+    if (!query || query.trim() === "") {
+      return res.status(400).json({
+        message: "search query is required",
+      });
+    }
+
+    const products = await searchProduct(query);
+    return res.json(products);
+  } catch (err) {
+    console.log(err);
+    if (err.message == "product not found!!")
+      return res.status(404).json({ message: "product not found!!" });
+    res.status(500).json({ message: "INTERNAL SERVER ERROR" });
+  }
+};
+
 module.exports = {
   createProduct,
   deleteProductBySku,
   getAllProducts,
   updateProductById,
   getProductById,
+  searchProducts,
 };

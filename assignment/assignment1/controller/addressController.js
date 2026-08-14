@@ -8,6 +8,8 @@ const {
   findAddress,
   searchAddress,
 } = require("../service/addressService");
+const authorize = require("../authorize");
+const { updateAddPolicy } = require("../Policies/addressPolicies");
 
 const createAddress = async (req, res) => {
   try {
@@ -80,6 +82,16 @@ const updAddress = async (req, res) => {
         message: "give id to update address!",
       });
     }
+    const add = await addressModel.findById(id);
+    if (!add) {
+      return res.status(404).json({
+        message: "address not found",
+      });
+    }
+    authorize(updateAddPolicy, {
+      user: req.user,
+      resource: add,
+    });
 
     const address = await updateAddress(
       id,
@@ -94,6 +106,11 @@ const updAddress = async (req, res) => {
     });
   } catch (err) {
     console.log(err);
+    if (err.statusCode === 403) {
+      return res.status(403).json({
+        message: "You are not allowed to update this address",
+    });
+  }
 
     if (err.message === "address not found") {
       return res.status(404).json({
@@ -169,7 +186,7 @@ const searchAddresses = async (req, res) => {
       });
     }
 
-    const address = await searchAddress(query,req.user.userID);
+    const address = await searchAddress(query, req.user.userID);
     return res.json({ address });
   } catch (err) {
     console.log(err);

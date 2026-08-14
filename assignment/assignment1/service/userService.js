@@ -1,6 +1,7 @@
 const userModel = require("../model/userModel");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
+const RefreshToken = require("../model/refreshTokenModel");
 
 const loginUser = async (email, password) => {
   const userExist = await userModel.findOne({ email });
@@ -15,17 +16,30 @@ const loginUser = async (email, password) => {
     throw new Error("Invalid credentials!!");
   }
 
-  const token = jwt.sign(
+  const accessToken = jwt.sign(
     { userID: userExist._id, role: userExist.role },
-    process.env.JWT_SECRET,
+    process.env.ACCESS_TOKEN_SECRET,
     {
-      expiresIn: "1h",
+      expiresIn: "15m",
     },
   );
 
+  const refreshToken = jwt.sign(
+    { userID: userExist._id, role: userExist.role },
+    process.env.REFRESH_TOKEN_SECRET,
+    { expiresIn: "7d" },
+  );
+
+  await RefreshToken.create({
+  user: userExist._id,
+  token: refreshToken,
+  expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+});
+
   return {
     user: userExist,
-    token,
+    accessToken,
+    refreshToken,
   };
 };
 
@@ -75,9 +89,7 @@ const getAllUser = async () => {
 };
 
 const getOneUser = async (id) => {
-  const user = await userModel
-    .findById(id)
-    .populate("addresses");
+  const user = await userModel.findById(id).populate("addresses");
 
   if (!user) {
     throw new Error("user not found");
@@ -90,5 +102,5 @@ module.exports = {
   loginUser,
   registerUser,
   getAllUser,
-  getOneUser
+  getOneUser,
 };

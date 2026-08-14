@@ -9,7 +9,8 @@ const {
   register,
   getAllUsers,
   getUserById,
-  getMyProfile
+  getMyProfile,
+  refreshToken
 } = require("../controller/userController");
 const authMiddleware = require("../middlewares/authMiddleware");
 const authorization = require("../middlewares/autorizationMiddleware");
@@ -25,5 +26,7 @@ router.get("/getAllUser", authMiddleware, authorization("admin"), getAllUsers);
 router.get("/getUserById/:id", authMiddleware, authorization("admin"), getUserById);
 
 router.get("/getMyInfo", authMiddleware, getMyProfile);
+
+router.post("/refreshToken",refreshToken)
 
 module.exports = router;

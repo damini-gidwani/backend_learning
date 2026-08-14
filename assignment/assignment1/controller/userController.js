@@ -1,18 +1,85 @@
-const { GrUserSettings } = require("react-icons/gr");
+const jwt = require("jsonwebtoken");
 const {
   loginUser,
   registerUser,
   getAllUser,
   getOneUser,
 } = require("../service/userService");
+const RefreshToken = require("../model/refreshTokenModel");
+
+const refreshToken = async (req, res) => {
+  try {
+    const token = req.cookies.refreshToken;
+
+    if (!token) {
+      return res.status(401).json({
+        message: "Refresh token missing",
+      });
+    }
+
+    // 2. DB mein check karo
+    const storedToken = await RefreshToken.findOne({
+      token: token,
+    });
+
+    if (storedToken.expiresAt < new Date()) {
+      return res.status(401).json({
+        message: "Refresh token expired",
+      });
+    }
+
+    if (!storedToken) {
+      return res.status(401).json({
+        message: "Refresh token is invalid",
+      });
+    }
+
+    // 3. JWT verify karo
+    const decode = jwt.verify(token, process.env.REFRESH_TOKEN_SECRET);
+
+    // 4. New access token banao
+    const newAccessToken = jwt.sign(
+      {
+        userID: decode.userID,
+        role: decode.role,
+      },
+      process.env.ACCESS_TOKEN_SECRET,
+      {
+        expiresIn: "15m",
+      },
+    );
+
+    // 5. New access token cookie mein save karo
+    res.cookie("accessToken", newAccessToken, {
+      httpOnly: true,
+    });
+
+    return res.status(200).json({
+      message: "Access token refreshed successfully",
+    });
+  } catch (error) {
+    console.log(error);
+
+    return res.status(401).json({
+      message: "Invalid token",
+    });
+  }
+};
 
 const login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    const { user, token } = await loginUser(email, password);
+    const { user, accessToken, refreshToken } = await loginUser(
+      email,
+      password,
+    );
 
-    res.cookie("givenToken", token, {
+    res.cookie("accessToken", accessToken, {
+      httpOnly: true,
+    });
+
+    res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
     });
 
@@ -34,8 +101,14 @@ const login = async (req, res) => {
 
 const logout = async (req, res) => {
   try {
-    res.clearCookie("givenToken", {
+    res.clearCookie("accessToken", {
       httpOnly: true,
+    });
+    res.clearCookie("refreshToken", {
+      httpOnly: true,
+    });
+    await RefreshToken.deleteOne({
+      token: req.cookies.refreshToken,
     });
 
     res.send("Logged out successfully!!");
@@ -112,19 +185,19 @@ const getUserById = async (req, res) => {
 
     return res.json({
       message: "user fetched successfully!",
-      user
+      user,
     });
   } catch (err) {
     console.log(err);
 
     if (err.message === "user not found") {
       return res.status(404).json({
-        message: "user not found"
+        message: "user not found",
       });
     }
 
     return res.status(500).json({
-      message: "Internal server error"
+      message: "Internal server error",
     });
   }
 };
@@ -135,17 +208,17 @@ const getMyProfile = async (req, res) => {
 
     return res.json({
       message: "user fetched successfully!",
-      user
+      user,
     });
   } catch (err) {
     if (err.message === "user not found") {
       return res.status(404).json({
-        message: "user not found"
+        message: "user not found",
       });
     }
 
     return res.status(500).json({
-      message: "Internal server error"
+      message: "Internal server error",
     });
   }
 };
@@ -156,5 +229,6 @@ module.exports = {
   register,
   getAllUsers,
   getUserById,
-  getMyProfile
+  getMyProfile,
+  refreshToken,
 };

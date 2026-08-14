@@ -1,10 +1,8 @@
 const jwt = require("jsonwebtoken");
-const userModel = require("../model/userModel");
-const { decodeBase64 } = require("bcryptjs");
 
-const authMiddleware = async (req, res, next) => {
+const authMiddleware = (req, res, next) => {
   try {
-    const token = req.cookies.givenToken;
+    const token = req.cookies.accessToken;
 
     if (!token) {
       return res
@@ -14,14 +12,10 @@ const authMiddleware = async (req, res, next) => {
 
     const decode = jwt.verify(
       token,
-      process.env.JWT_SECRET
+      process.env.ACCESS_TOKEN_SECRET
     );
 
     // const user = await userModel.findById(decode.userID);
-
-    if (!decode) {
-      return res.status(401).send("User not found");
-    }
 
     req.user = decode;
 

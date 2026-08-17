@@ -6,7 +6,7 @@ const {
   getProductByIdService,
   searchProduct,
 } = require("../service/productService");
-
+const cloudinary = require("../config/cloudinary");
 // CREATE PRODUCT
 const createProduct = async (req, res) => {
   try {
@@ -165,24 +165,65 @@ const searchProducts = async (req, res) => {
   }
 };
 
+//for diskStorage
+
+// const uploadProduct = async (req, res) => {
+//   try {
+//     if (req.files.length===0) {
+//       return res.status(400).json({
+//         message: "Product image is required",
+//       });
+//     }
+//     console.log(req.files);
+
+//     return res.status(200).json({
+//       message: "Product image uploaded successfully",
+//       files: req.files,
+//     });
+//   } catch (error) {
+//     console.log(error);
+
+//     return res.status(500).json({
+//       message: "Error uploading product image",
+//       error: error.message,
+//     });
+//   }
+// };
+
+//for memeory storage + cloudinary
 const uploadProduct = async (req, res) => {
   try {
-    if (req.files.length===0) {
+    if (!req.files || req.files.length === 0) {
       return res.status(400).json({
-        message: "Product image is required",
+        message: "Images are required",
       });
     }
-    console.log(req.files);
-    
+    const uploadedImages = [];
+
+    for (const file of req.files) {
+      const result = await new Promise((resolve, reject) => {
+        const stream = cloudinary.uploader.upload_stream(
+          {
+            folder: "products",
+            resource_type: "image",
+          },
+          (error, result) => {
+            if (error) reject(error);
+            else resolve(result);
+          },
+        );
+        stream.end(file.buffer);
+      });
+      uploadedImages.push(result.secure_url);
+    }
     return res.status(200).json({
-      message: "Product image uploaded successfully",
-      files: req.files,
+      message: "Images uploaded successfully",
+      images: uploadedImages,
     });
   } catch (error) {
-    console.log(error);
-
+    console.error(error);
     return res.status(500).json({
-      message: "Error uploading product image",
+      message: "Error uploading images",
       error: error.message,
     });
   }
@@ -195,5 +236,5 @@ module.exports = {
   updateProductById,
   getProductById,
   searchProducts,
-  uploadProduct
+  uploadProduct,
 };

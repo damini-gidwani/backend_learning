@@ -5,6 +5,7 @@ require("dotenv").config({
 const express = require("express");
 const cookieParser = require("cookie-parser");
 const connectDB = require("./db");
+const path = require("path")
 
 const app = express();
 
@@ -20,6 +21,7 @@ app.use(cookieParser());
 app.use("/auth", authRouter);
 app.use("/product", productRouter);
 app.use("/address", addressRouter);
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 connectDB()
   .then(() => {

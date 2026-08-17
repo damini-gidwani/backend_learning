@@ -165,6 +165,29 @@ const searchProducts = async (req, res) => {
   }
 };
 
+const uploadProduct = async (req, res) => {
+  try {
+    if (req.files.length===0) {
+      return res.status(400).json({
+        message: "Product image is required",
+      });
+    }
+    console.log(req.files);
+    
+    return res.status(200).json({
+      message: "Product image uploaded successfully",
+      files: req.files,
+    });
+  } catch (error) {
+    console.log(error);
+
+    return res.status(500).json({
+      message: "Error uploading product image",
+      error: error.message,
+    });
+  }
+};
+
 module.exports = {
   createProduct,
   deleteProductBySku,
@@ -172,4 +195,5 @@ module.exports = {
   updateProductById,
   getProductById,
   searchProducts,
+  uploadProduct
 };

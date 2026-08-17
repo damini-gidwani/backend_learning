@@ -19,7 +19,7 @@ app.use(cookieParser());
 //routes
 app.use("/auth", authRouter);
 app.use("/product", productRouter);
-app.use("/address",addressRouter)
+app.use("/address", addressRouter);
 
 connectDB()
   .then(() => {

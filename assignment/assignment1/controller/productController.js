@@ -6,6 +6,7 @@ const {
   getProductByIdService,
   searchProduct,
 } = require("../service/productService");
+const imageModel = require("../model/imageModel");
 const cloudinary = require("../config/cloudinary");
 // CREATE PRODUCT
 const createProduct = async (req, res) => {
@@ -214,7 +215,14 @@ const uploadProduct = async (req, res) => {
         );
         stream.end(file.buffer);
       });
-      uploadedImages.push(result.secure_url);
+      uploadedImages.push({
+        url: result.secure_url,
+        public_id: result.public_id,
+      });
+      await imageModel.create({
+        url: result.secure_url,
+        public_id: result.public_id,
+      });
     }
     return res.status(200).json({
       message: "Images uploaded successfully",

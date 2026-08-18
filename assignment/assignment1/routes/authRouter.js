@@ -3,6 +3,7 @@ const registerSchema = require("../validationSchema/registerValidationSchema");
 const loginSchema = require("../validationSchema/loginValidationSchema");
 const express = require("express");
 const router = express.Router();
+const upload = require("../middlewares/uploadMiddleware")
 const {
   login,
   logout,
@@ -15,7 +16,7 @@ const {
 const authMiddleware = require("../middlewares/authMiddleware");
 const authorization = require("../middlewares/autorizationMiddleware");
 
-router.post("/register", validationMiddleware(registerSchema), register);
+router.post("/register",upload.single("profilePicture"), validationMiddleware(registerSchema), register);
 
 router.post("/login", validationMiddleware(loginSchema), login);
 

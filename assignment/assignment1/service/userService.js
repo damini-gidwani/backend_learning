@@ -52,6 +52,7 @@ const registerUser = async (
   email,
   createPass,
   confirmPass,
+  profilePicture
 ) => {
   const user = await userModel.findOne({ email });
 
@@ -71,6 +72,7 @@ const registerUser = async (
     role,
     email,
     password: createPass,
+    profilePicture: profilePicture
   };
 
   const createdUser = await userModel.create(newUser);

@@ -6,6 +6,7 @@ const {
   getOneUser,
 } = require("../service/userService");
 const RefreshToken = require("../model/refreshTokenModel");
+const cloudinary = require("../config/cloudinary");
 
 const refreshToken = async (req, res) => {
   try {
@@ -126,6 +127,27 @@ const register = async (req, res) => {
     const { fname, lname, dob, gen, role, email, createPass, confirmPass } =
       req.body;
 
+    let profilePicture = null;
+    if (req.file) {
+      const result = await new Promise((resolve, reject) => {
+        const stream = cloudinary.uploader.upload_stream(
+          {
+            folder: "profilePictures",
+            resource_type: "image",
+          },
+          (error, result) => {
+            if (error) reject(error);
+            else resolve(result);
+          },
+        );
+        stream.end(req.file.buffer);
+      });
+      profilePicture = {
+        url: result.secure_url,
+        publicID: result.public_id,
+      };
+    }
+
     const createdUser = await registerUser(
       fname,
       lname,
@@ -135,6 +157,7 @@ const register = async (req, res) => {
       email,
       createPass,
       confirmPass,
+      profilePicture,
     );
 
     res.status(201).json({
@@ -147,6 +170,7 @@ const register = async (req, res) => {
         gen: createdUser.gen,
         role: createdUser.role,
         email: createdUser.email,
+        profilePicture: createdUser.profilePicture?.url || null,
       },
     });
   } catch (err) {

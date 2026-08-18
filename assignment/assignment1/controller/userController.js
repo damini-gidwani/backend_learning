@@ -7,6 +7,7 @@ const {
 } = require("../service/userService");
 const RefreshToken = require("../model/refreshTokenModel");
 const cloudinary = require("../config/cloudinary");
+const userModel = require("../model/userModel");
 
 const refreshToken = async (req, res) => {
   try {
@@ -247,6 +248,103 @@ const getMyProfile = async (req, res) => {
   }
 };
 
+const dltProfile = async (req, res) => {
+  try {
+    const user = await userModel.findById(req.user.userID);
+
+    if (!user) {
+      return res.status(404).json({
+        message: "User not found",
+      });
+    }
+
+    if (!user.profilePicture || !user.profilePicture.publicID) {
+      return res.status(400).json({
+        message: "Profile picture does not exist",
+      });
+    }
+
+    const publicId = user.profilePicture.publicID;
+
+    await cloudinary.uploader.destroy(publicId);
+
+    user.profilePicture = null;
+    await user.save();
+
+    return res.json({
+      message: `${user.fname}'s profile picture deleted successfully!`,
+    });
+  } catch (err) {
+    console.log(err);
+
+    return res.status(500).json({
+      message: "Internal server error",
+    });
+  }
+};
+
+const updProfile = async (req, res) => {
+  try {
+    const user = await userModel.findById(req.user.userID);
+
+    if (!user) {
+      return res.status(404).json({
+        message: "User not found",
+      });
+    }
+
+    if (!req.file) {
+      return res.status(400).json({
+        message: "Profile picture is required",
+      });
+    }
+
+    // Old picture ka publicID save kar lo
+    const oldPublicId = user.profilePicture?.publicID;
+
+    // New image upload
+    const result = await new Promise((resolve, reject) => {
+      const stream = cloudinary.uploader.upload_stream(
+        {
+          folder: "profilePictures",
+          resource_type: "image",
+        },
+        (error, result) => {
+          if (error) reject(error);
+          else resolve(result);
+        },
+      );
+
+      stream.end(req.file.buffer);
+    });
+
+    // DB mein new picture save
+    user.profilePicture = {
+      url: result.secure_url,
+      publicID: result.public_id,
+    };
+
+    await user.save();
+
+    // Agar old picture thi, tab delete karo
+    if (oldPublicId) {
+      await cloudinary.uploader.destroy(oldPublicId);
+    }
+
+    return res.json({
+      message: "Profile picture updated successfully!",
+      profilePicture: user.profilePicture,
+    });
+
+  } catch (err) {
+    console.log(err);
+
+    return res.status(500).json({
+      message: "Internal server error",
+    });
+  }
+};
+
 module.exports = {
   login,
   logout,
@@ -255,4 +353,6 @@ module.exports = {
   getUserById,
   getMyProfile,
   refreshToken,
+  dltProfile,
+  updProfile
 };

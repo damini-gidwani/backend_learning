@@ -11,7 +11,9 @@ const {
   getAllUsers,
   getUserById,
   getMyProfile,
-  refreshToken
+  refreshToken,
+  dltProfile,
+  updProfile
 } = require("../controller/userController");
 const authMiddleware = require("../middlewares/authMiddleware");
 const authorization = require("../middlewares/autorizationMiddleware");
@@ -28,6 +30,10 @@ router.get("/getUserById/:id", authMiddleware, authorization("admin"), getUserBy
 
 router.get("/getMyInfo", authMiddleware, getMyProfile);
 
-router.post("/refreshToken",refreshToken)
+router.post("/refreshToken",refreshToken);
+
+router.delete("/dltProfilePicture",authMiddleware,dltProfile)
+
+router.post("/updProfilePicture",upload.single("image"),authMiddleware,updProfile)
 
 module.exports = router;

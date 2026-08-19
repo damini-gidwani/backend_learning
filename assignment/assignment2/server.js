@@ -5,11 +5,15 @@ require("dotenv").config({
 const express = require("express");
 const connectDB = require("./config/db");
 const route=require("./route/reviewRoute")
+const {notFound,errorHandler}=require("./middleware/errorHandler")
 
 const app = express();
 app.use(express.json());
 
 app.use("/review",route)
+
+app.use(notFound);
+app.use(errorHandler);
 
 connectDB()
   .then(() => {

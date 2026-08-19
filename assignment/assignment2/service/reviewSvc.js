@@ -1,14 +1,22 @@
 const reviewModel = require("../model/reviewModel");
 
+const {
+  badRequest,
+  notFound,
+} = require("../utils/apiError");
+
 const createReview = async (data) => {
-  let exists = await reviewModel.findOne({
+  const exists = await reviewModel.findOne({
     reviewerName: data.reviewerName,
     title: data.title,
   });
+
   if (exists) {
-    throw new Error("Duplicate review");
+    throw badRequest("Duplicate review");
   }
+
   const createdReview = await reviewModel.create(data);
+
   return createdReview;
 };
 
@@ -19,8 +27,9 @@ const getReviews = async (page, limit) => {
     .skip((Number(page) - 1) * Number(limit));
 
   if (allReviews.length === 0) {
-    throw new Error("no review found");
+    throw notFound("No review found");
   }
+
   return allReviews;
 };
 
@@ -28,7 +37,7 @@ const getSingleReview = async (id) => {
   const review = await reviewModel.findById(id);
 
   if (!review) {
-    throw new Error("Review not found");
+    throw notFound("Review not found");
   }
 
   return review;
@@ -41,7 +50,7 @@ const updateReview = async (id, data) => {
   });
 
   if (!review) {
-    throw new Error("Review not found");
+    throw notFound("Review not found");
   }
 
   return review;
@@ -51,7 +60,7 @@ const deleteReview = async (id) => {
   const review = await reviewModel.findByIdAndDelete(id);
 
   if (!review) {
-    throw new Error("Review not found");
+    throw notFound("Review not found");
   }
 
   return review;

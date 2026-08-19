@@ -12,10 +12,7 @@ const createRev = async (req, res) => {
     const review = await createReview(data);
     res.status(201).json({ message: "review created successfully!!", review });
   } catch (err) {
-    console.log(err);
-    if (err.message == "Duplicate review")
-      return res.status(400).json({ message: "Duplicate review" });
-    res.status(500).json({ message: "internal server error" });
+    next(err)
   }
 };
 
@@ -25,10 +22,7 @@ const getRev = async (req, res) => {
     const reviews = await getReviews(page, limit);
     res.json({ message: "reviews fetched suucessfully!!", reviews });
   } catch (err) {
-    console.log(err);
-    if (err.message == "no review found")
-      return res.status(400).json({ message: "no review found" });
-    res.status(500).json({ message: "internal server error" });
+    next(err)
   }
 };
 
@@ -41,12 +35,7 @@ const getSingleRev = async (req, res) => {
       review,
     });
   } catch (err) {
-    console.log(err);
-
-    if (err.message === "Review not found")
-      return res.status(404).json({ message: "Review not found" });
-
-    res.status(500).json({ message: "internal server error" });
+    next(err)
   }
 };
 
@@ -59,12 +48,7 @@ const updateRev = async (req, res) => {
       review,
     });
   } catch (err) {
-    console.log(err);
-
-    if (err.message === "Review not found")
-      return res.status(404).json({ message: "Review not found" });
-
-    res.status(500).json({ message: "internal server error" });
+    next(err)
   }
 };
 
@@ -77,12 +61,7 @@ const deleteRev = async (req, res) => {
       review,
     });
   } catch (err) {
-    console.log(err);
-
-    if (err.message === "Review not found")
-      return res.status(404).json({ message: "Review not found" });
-
-    res.status(500).json({ message: "internal server error" });
+    next(err)
   }
 };
 

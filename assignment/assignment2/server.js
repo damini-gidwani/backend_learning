@@ -5,12 +5,16 @@ require("dotenv").config({
 const express = require("express");
 const connectDB = require("./config/db");
 const route=require("./route/reviewRoute")
+const staffRoute = require("./route/staffRoute")
 const {notFound,errorHandler}=require("./middleware/errorHandler")
+const cookieParser=require("cookie-parser")
 
 const app = express();
 app.use(express.json());
+app.use(cookieParser());
 
 app.use("/review",route)
+app.use("/staff", staffRoute);
 
 app.use(notFound);
 app.use(errorHandler);
